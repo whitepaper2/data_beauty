@@ -8,7 +8,7 @@ vec3 = np.linspace(0, 4, 5)
 vec4 = np.zeros(5)
 for i in range(5):
     vec4[i] = i
-# vec5 = np.loadtxt("./president.xlsx")
+# vec5 = np.loadtxt("./dataset/president.xlsx")
 print(vec1)
 print(vec2)
 print(vec3)

@@ -2,7 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-ds_arr = np.loadtxt("./lottery_1970.txt", skiprows=1, usecols=[3, 4])
+ds_arr = np.loadtxt("./dataset/lottery_1970.txt", skiprows=1, usecols=[3, 4])
 
 # print(df)
 # x:location,h:bandwidth,xp,yp:data points(vectors)

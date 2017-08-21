@@ -6,7 +6,7 @@ import seaborn as sns
 sns.set(color_codes=True)  # 导入seaborn包设定颜色
 fig, ax = plt.subplots(1, 2)
 
-df = pd.read_excel("./president.xlsx")  # 导入数据集
+df = pd.read_excel("./dataset/president.xlsx")  # 导入数据集
 # kernels = ["biw", "cos", "epa", "gau", "tri", "triw"]
 # for k in kernels:
 #     sns.kdeplot(df["Month"], kernel=k, label=k)
