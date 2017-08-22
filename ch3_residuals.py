@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 
 # defaults
-plt.rcParams['figure.figsize'] = (20.0, 10.0)
+plt.rcParams['figure.figsize'] = (20.0, 8.0)
 plt.rcParams.update({'font.size': 10})
 plt.rcParams['xtick.major.pad'] = '5'
 plt.rcParams['ytick.major.pad'] = '5'
@@ -65,5 +65,16 @@ plot_scatter_curve(ax[2], df["Year"], s1_female_residual, s2_female_residual,
                    "Year", "Female_Residual")
 # ax.set_title("Finish time in Marathon between Male and Female")
 # ax.grid(True)
-fig.tight_layout()
+
+# fig.tight_layout()
+# share x axis
+fig2, ax2 = plt.subplots(2, 1, sharex=True)
+ax2[0].scatter(df["Year"], s1_male_residual)
+ax2[0].plot(df["Year"], np.zeros(len(df["Year"])), "k--")
+ax2[0].set_ylabel("Residual:losses")
+ax2[1].scatter(df["Year"], s2_male_residual)
+ax2[1].plot(df["Year"], np.zeros(len(df["Year"])), "g--")
+ax2[1].set_ylabel("Residual:stright line")
+ax2[1].set_xlabel("Year")
+# fig2.tight_layout()
 plt.show()
