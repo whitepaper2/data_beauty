@@ -7,3 +7,6 @@
 * Pycharm/python3.6
 * Anaconda3
 * 《Data Analysis with Open Source Tools》
+## Additional
+* Excel-vba:In my work,I often used these sub-function to process data quickly
+* code && sample: dir vba
