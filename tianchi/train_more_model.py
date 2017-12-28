@@ -6,23 +6,17 @@
 # @File    : train_more_model.py
 # @Software: PyCharm
 
+import os
 from datetime import datetime
 
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-from sklearn import metrics
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.externals import joblib
-from sklearn.feature_selection import SelectKBest
-from sklearn.feature_selection import mutual_info_regression
-from sklearn.feature_selection import f_regression
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
-import os
 import xgboost as xgb
-import matplotlib.pyplot as plt
-from xgboost import plot_tree
-
+from sklearn import metrics
+from sklearn.externals import joblib
+from sklearn.model_selection import train_test_split
+from scipy.stats import gmean
 # defaults
 plt.rcParams['figure.figsize'] = (200.0, 80.0)
 plt.rcParams.update({'font.size': 10})
@@ -30,6 +24,8 @@ plt.rcParams['xtick.major.pad'] = '5'
 plt.rcParams['ytick.major.pad'] = '5'
 
 plt.style.use('ggplot')
+
+
 def get_del_cols():
     del_txt_columns = ['ID', 'TOOL_ID', 'Tool', 'TOOL_ID (#1)', 'TOOL_ID (#2)', 'TOOL_ID (#3)', 'Tool (#2)',
                        'tool (#1)', 'TOOL',
@@ -440,9 +436,13 @@ def initial():
     if not os.path.exists(out_path):
         os.mkdir(out_path)
     return today
+
+
 def get_eta_parameter():
     eta_parameter = [0.05, 0.1, 0.2, 0.3, 0.4, 0.5]
     return eta_parameter
+
+
 def train_model():
     today = initial()
     path = "./dataset/训练.xlsx"
@@ -467,7 +467,7 @@ def train_model():
         # 预测
         y_test_pred = bst.predict(dtest)
         mse = metrics.mean_squared_error(y_test, y_test_pred)
-        print("mse={}".format(mse))
+        print("eta={}, mse={}".format(eta, mse))
         joblib.dump(bst, "./output/{}/bstRegressor_model{}.m".format(today, eta))
 
 
@@ -485,12 +485,15 @@ def predict_newdata():
     for ind, eta in enumerate(eta_parameter):
         bst = joblib.load("./output/{}/bstRegressor_model{}.m".format(today, eta))
         predictions[ind] = bst.predict(sel_data)
-    predict_avg = np.sum(predictions, axis=0)/eta_len
+    # 据说几何平均数比算数平均数效果好
+    # predict_avg = np.average(predictions, axis=0)
+    predict_avg = gmean(predictions, axis=0)
     result = list(zip(input_data.iloc[:, 0], predict_avg))
     create_time = datetime.now().strftime("%Y%m%d%H%M%S")
     np.savetxt("./output/{}/训练A_{}.csv".format(today, create_time), result, fmt="%s", delimiter=",")
 
 
 if __name__ == "__main__":
+    # initial()
     predict_newdata()
     # train_model()

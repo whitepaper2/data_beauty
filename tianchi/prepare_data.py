@@ -1,10 +1,13 @@
+from datetime import datetime
+
 import numpy as np
 import pandas as pd
 from sklearn import metrics
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.externals import joblib
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import mutual_info_regression
-from sklearn.linear_model import SGDRegressor
+from sklearn.feature_selection import f_regression
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
@@ -468,41 +471,120 @@ def process_data():
     x_test_standard = scaler.transform(x_test)  # apply same transformation to test data
     # 3、单变量筛选
     print("step3: select topK cols...")
-    selection = SelectKBest(mutual_info_regression, k=20)
+    selection = SelectKBest(mutual_info_regression, k=30)
     x_train_selection = selection.fit_transform(x_train_standard, y_train)
     x_test_selection = selection.transform(x_test_standard)
     selection_indices = selection.get_support(indices=True)  # 得到入模的列下标
-    # 4、sgd regression
+    # 4、train model
     print("step4: train model...")
-    clf = SGDRegressor(n_iter=10)
+    estimator_num = 20
+    clf = RandomForestRegressor(random_state=0, n_estimators=estimator_num, n_jobs=-1)
     clf.fit(x_train_selection, y_train)
-    joblib.dump(clf, "./output/sgdRegressor_model.m")
     y_test_pred = clf.predict(x_test_selection)
     mse = metrics.mean_squared_error(y_test, y_test_pred)
-    print("mse={}\n".format(mse))
-    np.savetxt("./output/mean_parameter.txt", scaler.mean_[selection_indices], delimiter=",")
-    np.savetxt("./output/std_parameter.txt", scaler.var_[selection_indices], delimiter=",")
-    np.savetxt("./output/selection_indices.txt", selection_indices, delimiter=",")
+    print("estimator_num={}, mse={}".format(estimator_num, mse))
+    today = datetime.now().strftime("%Y%m%d")
+    joblib.dump(clf, "./output/{}/rfRegressor_model.m".format(today))
+    np.savetxt("./output/{}/mean_parameter.txt".format(today), scaler.mean_[selection_indices], delimiter=",")
+    np.savetxt("./output/{}/std_parameter.txt".format(today), scaler.var_[selection_indices], delimiter=",")
+    np.savetxt("./output/{}/selection_indices.txt".format(today), selection_indices, delimiter=',', fmt="%d")
+    np.savetxt("./output/{}/feature_importances.txt".format(today), clf.feature_importances_)
+
+
+def train_model():
+    path = "./dataset/训练.xlsx"
+    df = pd.read_excel(path)
+    # 1、删除文本格式、时间格式
+    print("step1: delete some cols begin...")
+    del_columns = get_del_cols()
+    del_df = df.drop(del_columns, axis=1)
+    # 2、统一量纲
+    print("step2: standard some cols...")
+    [rows, cols] = del_df.shape
+    x = del_df.iloc[:, 0:cols - 1]
+    y = del_df.iloc[:, cols - 1]
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
+    scaler = StandardScaler()
+    scaler.fit(x_train)  # Don't cheat - fit only on training data
+    x_train_standard = scaler.transform(x_train)
+    x_test_standard = scaler.transform(x_test)  # apply same transformation to test data
+    # 3、单变量筛选
+    print("step3: select topK cols...")
+    selection = SelectKBest(mutual_info_regression, k=30)
+    # selection = SelectKBest(f_regression, k=70)
+    x_train_selection = selection.fit_transform(x_train_standard, y_train)
+    x_test_selection = selection.transform(x_test_standard)
+    selection_indices = selection.get_support(indices=True)  # 得到入模的列下标
+    # 4、train model
+    print("step4: train model...")
+    # clf = SGDRegressor()
+    today = datetime.now().strftime("%Y%m%d")
+    for estimator_num in range(10, 50, 2):
+        clf = RandomForestRegressor(random_state=0, n_estimators=estimator_num, n_jobs=-1)
+        clf.fit(x_train_selection, y_train)
+        y_test_pred = clf.predict(x_test_selection)
+        mse = metrics.mean_squared_error(y_test, y_test_pred)
+        print("estimator_num={}, mse={}".format(estimator_num, mse))
+        feature_importances = sorted(list(zip(selection_indices, clf.feature_importances_)), key=lambda ele: ele[1],
+                                     reverse=True)
+        np.savetxt("./output/{}/feature_importances{}.csv".format(today, estimator_num), feature_importances, delimiter=',', fmt="%s")
+        # joblib.dump(clf, "./output/sgdRegressor_model.m")
+
+
+def calc_corr():
+    path = "./dataset/训练.xlsx"
+    df = pd.read_excel(path)
+    # 1、删除文本格式、时间格式
+    print("step1: delete some cols begin...")
+    del_columns = get_del_cols()
+    del_df = df.drop(del_columns, axis=1)
+    # 2、统一量纲
+    print("step2: standard some cols...")
+    [rows, cols] = del_df.shape
+    x = del_df.iloc[:, 0:cols - 1]
+    y = del_df.iloc[:, cols - 1]
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.3, random_state=0)
+    scaler = StandardScaler()
+    scaler.fit(x_train)  # Don't cheat - fit only on training data
+    x_train_standard = scaler.transform(x_train)
+    x_test_standard = scaler.transform(x_test)  # apply same transformation to test data
+    # 3、单变量筛选
+    print("step3: select topK cols...")
+    K = 70
+    selection = SelectKBest(mutual_info_regression, k=K)
+    x_train_selection = selection.fit_transform(x_train_standard, y_train)
+    x_test_selection = selection.transform(x_test_standard)
+    # 4、相关系数
+    print("step4: calc variables correlation...")
+    corrmat = pd.DataFrame(x_train_selection).corr()
+    print(corrmat)
+    today = datetime.now().strftime("%Y%m%d")
+    np.savetxt("./output/{}/selection_score.txt".format(today), selection.scores_)
+    corrmat.to_csv("./output/{}/corr_mat_selection{}.csv".format(today, K))
 
 
 def predict_newdata():
-    mean_parameter = np.loadtxt("./output/mean_parameter.txt", delimiter=",")
-    std_parameter = np.loadtxt("./output/std_parameter.txt", delimiter=",")
-    selection_indices = np.loadtxt("./output/selection_indices.txt", delimiter=",")
+    today = datetime.now().strftime("%Y%m%d")
+    mean_parameter = np.loadtxt("./output/{}/mean_parameter.txt".format(today), delimiter=",")
+    std_parameter = np.loadtxt("./output/{}/std_parameter.txt".format(today), delimiter=",")
+    selection_indices = np.loadtxt("./output/{}/selection_indices.txt".format(today), delimiter=",")
     del_columns = get_del_cols()
     input_data = pd.read_excel("./dataset/测试A.xlsx")
     del_df = input_data.drop(del_columns, axis=1)
     sel_data = del_df.iloc[:, selection_indices]
-    newdata = (sel_data-mean_parameter)/std_parameter
+    newdata = (sel_data - mean_parameter) / std_parameter
     # ＃加载模型
-    RF = joblib.load("./output/sgdRegressor_model.m")
+    RF = joblib.load("./output/{}/rfRegressor_model.m".format(today))
     predict_val = RF.predict(newdata)
     result = list(zip(input_data.iloc[:, 0], predict_val))
     print(result)
-    np.savetxt("./output/训练A.csv", result, fmt="%s", delimiter=",")
+    create_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    np.savetxt("./output/{}/训练A_{}.csv".format(today, create_time), result, fmt="%s", delimiter=",")
 
 
 if __name__ == "__main__":
     # getDataSummary("./dataset/训练.xlsx", "./output")
     # process_data()
     predict_newdata()
+    # train_model()
+    # calc_corr()
