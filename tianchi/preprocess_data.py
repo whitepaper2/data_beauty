@@ -12,12 +12,27 @@
 # 4、频数>=475 or 时间格式 or 列取值相同分布 or 标准差=0
 import os
 from datetime import datetime
-from sklearn.model_selection import train_test_split
+
+import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
+
+
+def get_today():
+    today = datetime.now().strftime("%Y%m%d")
+    out_path = "./output/{}".format(today)
+    if not os.path.exists(out_path):
+        os.mkdir(out_path)
+    return today
+
+
+today_timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+
+today = get_today()
 
 
 def get_delete_cols():
-    del_str_cols = ["TOOL (#1)", "TOOL (#2)"]
+    # del_str_cols = ["TOOL (#1)", "TOOL (#2)"]
     del_int_cols = ['210X17', '210X21', '210X22', '210X31', '210X37', '210X38', '210X77', '210X78', '210X79', '210X80',
                     '210X103', '210X196', '210X197', '210X198', '210X199', '210X214', '210X218', '210X221', '210X222',
                     '210X223', '210X224', '210X227', '220X1', '220X7', '220X17', '220X24', '220X57', '220X58', '220X61',
@@ -589,7 +604,7 @@ def get_delete_cols():
                       '340X152', '340X154', '340X156', '340X158', '340X160', '340X162', '340X164', '340X166', '340X168',
                       '340X170', '340X172', '340X174', '340X176', '340X178', '340X180'
                       ]
-    del_cols = del_str_cols + del_int_cols + del_float_cols
+    del_cols = del_int_cols + del_float_cols
     return del_cols
 
 
@@ -607,11 +622,11 @@ def get_train_data():
     return del_df
 
 
+
 def encode_onehot(df):
     delID_df = df.drop('ID', axis=1)
     ID = df['ID']
     encode_df = pd.get_dummies(delID_df)
-    sorted_cols = sorted(encode_df.columns)
     # del_cols = ['TOOL_ID', 'Tool', 'TOOL_ID (#1)', 'TOOL_ID (#2)', 'TOOL_ID (#3)', 'Tool (#2)', 'tool (#1)', 'TOOL']
     # return encode_df.drop(del_cols, axis=1)
     return ID, encode_df
@@ -961,14 +976,6 @@ def get_encode_schema():
     return cols
 
 
-def get_today():
-    today = datetime.now().strftime("%Y%m%d")
-    out_path = "./output/{}".format(today)
-    if not os.path.exists(out_path):
-        os.mkdir(out_path)
-    return today
-
-
 def get_train_test():
     df = get_train_data()
     [rows, cols] = df.shape
@@ -977,6 +984,20 @@ def get_train_test():
     id, enc_x = encode_onehot(x)
     x_train, x_test, y_train, y_test = train_test_split(enc_x, y, test_size=0.2, random_state=0)
     return x_train, x_test, y_train, y_test
+
+
+def get_minmax_train_test():
+    train_test = np.loadtxt("./output/{}/minmax_train_test.txt".format(today))
+    x = train_test[:, 1:]
+    y = train_test[:, 0]
+    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+    return x_train, x_test, y_train, y_test
+
+
+def get_minmax_valid():
+    # ID = np.loadtxt("./output/{}/imp_id.txt".format(today), dtype=str)
+    valid = np.loadtxt("./output/{}/minmax_valid.txt".format(today))
+    return valid
 
 
 def get_encode_newdata():
@@ -992,9 +1013,49 @@ def get_encode_newdata():
     return id, sorted_df
 
 
+def value_counts(das, nhead=5):
+    tmp = pd.value_counts(das).reset_index().rename_axis({"index": das.name}, axis=1)
+    value = pd.DataFrame(['value {}'.format(x + 1) for x in range(nhead)], index=np.arange(nhead)).join(tmp.iloc[:, 0],
+                                                                                                        how="left").set_index(
+        0).T
+    freq = pd.DataFrame(['freq {}'.format(x + 1) for x in range(nhead)], index=np.arange(nhead)).join(tmp.iloc[:, 1],
+                                                                                                      how="left").set_index(
+        0).T
+    nnull = das.isnull().sum()
+    freqother = pd.DataFrame({das.name: [das.shape[0] - nnull - np.nansum(freq.values), nnull]},
+                             index=["freq others", "freq NA"]).T
+    op = pd.concat([value, freq, freqother], axis=1)
+    return (op)
+
+
+def get_data_summary(da):
+    op = pd.concat([pd.DataFrame({"type": da.dtypes, "n": da.notnull().sum(axis=0)}), da.describe().T.iloc[:, 1:],
+                    pd.concat(map(lambda i: value_counts(da.loc[:, i]), da.columns))], axis=1).loc[da.columns]
+    op.index.name = "Columns"
+    create_time = datetime.now().strftime("%Y%m%d%H%M%S")
+    op.to_csv("./output/{}/data_summary{}.csv".format(today, create_time))
+
+
+def get_group_num(df):
+    # df = get_train_data()
+    da = df[df["TOOL_ID"].isin(["M"])]
+    da2 = da.iloc[:, 4]
+    print(da2.value_counts())
+
 if __name__ == "__main__":
-    today = get_today()
-    df = get_train_data()
-    ID, en_df = encode_onehot(df)
-    print(en_df.head())
-    en_df.to_csv("./output/{}/en_df.csv".format(today))
+    # df = get_train_data()
+    # df.to_csv("./output/{}/df.csv".format(today))
+    # ID, en_df = encode_onehot(df)
+    # print(en_df.head())
+    # en_df.to_csv("./output/{}/en_df.csv".format(today))
+    # get_data_summary(en_df)
+    # get_group_num(df)
+    df = pd.DataFrame([[np.nan, 2, np.nan, 0],
+                    [3, 4, np.nan, 1],
+                    [np.nan, np.nan, np.nan, 5],
+                    [np.nan, 3, np.nan, 4]],
+                   columns=list('ABCD'))
+    print(df.fillna(value="NaN"))
+
+
+

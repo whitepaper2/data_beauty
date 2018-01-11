@@ -21,6 +21,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.preprocessing import StandardScaler
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import mutual_info_regression
+from preprocess_data import *
+
 # defaults
 plt.rcParams['figure.figsize'] = (200.0, 80.0)
 plt.rcParams.update({'font.size': 10})
@@ -481,17 +483,19 @@ def train_model():
 
 
 def train_xgboost():
-    today = initial()
-    path = "./dataset/训练.xlsx"
-    df = pd.read_excel(path)
-    # 1、删除文本格式、时间格式
-    print("step1: delete some cols begin...")
-    del_columns = get_del_cols()
-    del_df = df.drop(del_columns, axis=1)
-    [rows, cols] = del_df.shape
-    x = del_df.iloc[:, 0:cols - 1]
-    y = del_df.iloc[:, cols - 1]
-    x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+    # today = initial()
+    # path = "./dataset/训练.xlsx"
+    # df = pd.read_excel(path)
+    # # 1、删除文本格式、时间格式
+    # print("step1: delete some cols begin...")
+    # del_columns = get_del_cols()
+    # del_df = df.drop(del_columns, axis=1)
+    # [rows, cols] = del_df.shape
+    # x = del_df.iloc[:, 0:cols - 1]
+    # y = del_df.iloc[:, cols - 1]
+    # x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=0)
+    today = get_today()
+    x_train, x_test, y_train, y_test = get_train_test()
     # 训练模型
     dtrain = xgb.DMatrix(x_train, label=y_train)
     dtest = xgb.DMatrix(x_test, label=y_test)
@@ -637,7 +641,7 @@ def predict_newdata():
 
 if __name__ == "__main__":
     # initial()
-    predict_newdata()
-    # train_xgboost()
+    # predict_newdata()
+    train_xgboost()
     # train_rf()
     # test_model()

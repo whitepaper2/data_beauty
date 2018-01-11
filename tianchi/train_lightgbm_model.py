@@ -479,6 +479,7 @@ def train_model():
     y_test_pred = gbm.predict(x_test, num_iteration=gbm.best_iteration)
     mse = metrics.mean_squared_error(y_test, y_test_pred)
     print("mse = {}".format(mse))
+    joblib.dump(gbm, "./output/{}/lgbmRegressor_model.m".format(today))
 
 
 def predict_newdata():
@@ -487,15 +488,10 @@ def predict_newdata():
     input_data = pd.read_excel("./dataset/测试A.xlsx")
     del_df = input_data.drop(del_columns, axis=1)
     [rows, cols] = del_df.shape
-    sel_data = xgb.DMatrix(del_df)
+    sel_data = lgb.Dataset(del_df)
     # ＃加载模型
-    eta_parameter = get_eta_parameter()
-    eta_len = len(eta_parameter)
-    predictions = np.zeros((eta_len, rows), dtype="float")
-    for ind, eta in enumerate(eta_parameter):
-        bst = joblib.load("./output/{}/bstRegressor_model{}.m".format(today, eta))
-        predictions[ind] = bst.predict(sel_data)
-    predict_avg = np.average(predictions, axis=0)
+    bst = joblib.load("./output/{}/lgbmRegressor_model.m".format(today))
+    predict_avg = bst.predict(del_df)
     result = list(zip(input_data.iloc[:, 0], predict_avg))
     create_time = datetime.now().strftime("%Y%m%d%H%M%S")
     np.savetxt("./output/{}/训练A_{}.csv".format(today, create_time), result, fmt="%s", delimiter=",")
@@ -503,5 +499,5 @@ def predict_newdata():
 
 if __name__ == "__main__":
     # initial()
-    # predict_newdata()
-    train_model()
+    predict_newdata()
+    # train_model()
