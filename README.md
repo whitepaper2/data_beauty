@@ -3,6 +3,7 @@
 1. chapter1:introduction
 2. chapter2:univariate analysis-kde/basic numpy
 3. chapter3:bivariate analysis-scatter plot/splines/losses
+4. tianchi:Ali big data contest about industry AI
 ## Development Environment
 * Pycharm/python3.6
 * Anaconda3
