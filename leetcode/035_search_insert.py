@@ -5,8 +5,10 @@
 # @Site    : 
 # @File    : 035_search_insert.py
 # @Software: PyCharm
+from common import timeit
 
 
+@timeit
 def search_insert(nums, target):
     """
     :type nums: List[int]
@@ -22,6 +24,7 @@ def search_insert(nums, target):
     return out
 
 
+@timeit
 def search_insert2(nums, target):
     """
     :type nums: List[int]
@@ -62,19 +65,15 @@ if __name__ == "__main__":
     """
     method2 is so faster than method1
     """
-    print("test1:")
     nums = [1, 3, 5, 6]
     target = 5
     print(search_insert2(nums, target))
-    print("test2:")
     nums = [1, 3, 5, 6]
     target = 2
     print(search_insert2(nums, target))
-    print("test3:")
     nums = [1, 3, 5, 6]
     target = 7
     print(search_insert2(nums, target))
-    print("test4:")
     nums = [1, 3, 5, 6]
     target = 0
     print(search_insert2(nums, target))

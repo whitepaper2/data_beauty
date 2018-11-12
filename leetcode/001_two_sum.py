@@ -5,7 +5,11 @@
 # @Site    : 
 # @File    : 001_two_sum.py
 # @Software: PyCharm
+# import timeit
+from common import timeit
 
+
+@timeit
 def twoSum(nums, target):
     """
     :type nums: List[int]
