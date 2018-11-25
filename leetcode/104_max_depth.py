@@ -21,10 +21,12 @@ def max_depth(root):
     :type root: TreeNode
     :rtype: int
     """
+
     def max_depth_subtree(p):
         if p is None:
             return 0
         return 1 + max(max_depth_subtree(p.left), max_depth_subtree(p.right))
+
     return max_depth_subtree(root)
 
 
@@ -55,18 +57,18 @@ def max_depth2(root):
 if __name__ == "__main__":
     root = TreeNode(1)
     left = TreeNode(2)
-    right = TreeNode(2)
+    # right = TreeNode(2)
     root.left = left
-    root.right = right
+    # root.right = right
+    #
+    # left2 = TreeNode(3)
+    # right2 = TreeNode(4)
+    # left.left = left2
+    # left.right = right2
 
-    left2 = TreeNode(3)
-    right2 = TreeNode(4)
-    left.left = left2
-    left.right = right2
-
-    left3 = TreeNode(4)
-    right3 = TreeNode(3)
-    right.left = left3
-    right.right = right3
+    # left3 = TreeNode(4)
+    # right3 = TreeNode(3)
+    # right.left = left3
+    # right.right = right3
 
     print(max_depth2(root))
