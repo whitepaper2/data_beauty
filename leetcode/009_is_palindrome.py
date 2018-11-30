@@ -9,6 +9,7 @@
 
 def is_palindrome(x):
     """
+    note:对数字进行元素抽取，再取前半部分元素逐一与后面元素相比较
     :type x: int
     :rtype: bool
     """
@@ -29,6 +30,28 @@ def is_palindrome(x):
     return out
 
 
+def is_palindrome2(x):
+    """
+    note: 数值转为字符串，双指针法，维护首尾指针，分别进行判断
+    :type x: int
+    :rtype: bool
+    """
+    out = True
+    x_str = str(x)
+    left = 0
+    right = len(x_str) - 1
+    while left < right:
+        if x_str[left] == x_str[right]:
+            left = left + 1
+            right = right - 1
+            out = True
+        else:
+            out = False
+            break
+
+    return out
+
+
 if __name__ == "__main__":
     """
     Given x = 121, return True
@@ -39,3 +62,8 @@ if __name__ == "__main__":
     print(is_palindrome(121))
     print(is_palindrome(-121))
     print(is_palindrome(120))
+
+    print(is_palindrome2(0))
+    print(is_palindrome2(121))
+    print(is_palindrome2(-121))
+    print(is_palindrome2(120))
