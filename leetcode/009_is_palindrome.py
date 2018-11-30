@@ -44,11 +44,9 @@ def is_palindrome2(x):
         if x_str[left] == x_str[right]:
             left = left + 1
             right = right - 1
-            out = True
         else:
             out = False
             break
-
     return out
 
 
