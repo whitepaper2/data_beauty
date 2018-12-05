@@ -16,6 +16,7 @@ class ListNode:
 
 def rotate_right(head, k):
     """
+    note: k值可以大于链表长度，首先得到链表长度n，截断位置k%n，同时记录截断处前后连接点
     :type head: ListNode
     :type k: int
     :rtype: ListNode
