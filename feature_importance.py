@@ -32,21 +32,80 @@ def woe_iv(data, feature, label):
         else:
             locals()["woe_{}".format(cato_num[feature][i])] = np.log(p_normal / p_default)
             print("woe_{}: {}".format(cato_num[feature][i], locals()["woe_{}".format(cato_num[feature][i])]))
-            iv = iv + (p_normal - p_default)*locals()["woe_{}".format(cato_num[feature][i])]
+            iv = iv + (p_normal - p_default) * locals()["woe_{}".format(cato_num[feature][i])]
     print("iv={} of {}".format(feature, iv))
     return iv
 
 
+def plot_bar():
+    import matplotlib.pyplot as plt
+    import matplotlib.patches as patches
+    import random
+
+    fig1 = plt.figure()
+    ax1 = fig1.add_subplot(111, aspect='equal')
+    data = []
+    # data = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0,0,0,0,1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+    for i in range(100):
+        data.append(random.randint(0, 1))
+    step = float(1 / len(data))
+
+    l = list(range(4))
+    x = 0.0
+    cnt = 0
+    print(data)
+    # step = 0.1
+    for i in data:
+        if i == 0:
+            ax1.add_patch(patches.Rectangle((x, 0), step, 0.6, facecolor="white"))
+        if i == 1:
+            ax1.add_patch(patches.Rectangle((x, 0), step, 0.6, facecolor="black"))
+        cnt = cnt + 1
+        x = x + step
+        print(x)
+        # x += 0.012
+    fig1.savefig('./barcode.png', dpi=90, bbox_inches='tight')
+    plt.close()
+
+
+def func_args(input, *args, **kwargs):
+    print(input)
+    print(args)
+    print(args[0])
+    for arg in args:
+        print("name={}".format(arg))
+    print(kwargs)
+
+
+def main(input, *args, **kwargs):
+    print(args)
+    context = {}
+    context["hdfs_url"] = "10.57"
+    context["login_account_id"] = "10.57.http"
+    args = ("10.57", "http:pengyuan")
+    kwargs.update(context)
+    func_args(input, *args, **kwargs)
+
+
 if __name__ == "__main__":
+    hdfs_dict = {}
+    hdfs_dict["hdfs_url"] = "10.57"
+    hdfs_dict["login_account_id"] = "10.57.http"
+
+    input = 1
+
+    # args = [context.get("hdfs_url"), context.get("login_account_id")]
+    main(input, hdfs_dict, 2, 3)
+    # plot_bar()
     # 生成data，包括x1,x2,x3三个自变量
-    x1 = np.random.randint(-3, 3, 1000)
-    x2 = 1.5 * np.random.randint(-3, 3, 1000)
-    x3 = 0.5 * np.random.randint(-3, 3, 1000)
-    y = (1 + x1 + x2 + x3 + np.random.randn()) > 0
-    X = np.column_stack([x1, x2, x3])
-    data = pd.DataFrame(X, columns=["x1", "x2", "x3"])
-    data["y"] = y
-    woe_iv(data, "x1", "y")
+    # x1 = np.random.randint(-3, 3, 1000)
+    # x2 = 1.5 * np.random.randint(-3, 3, 1000)
+    # x3 = 0.5 * np.random.randint(-3, 3, 1000)
+    # y = (1 + x1 + x2 + x3 + np.random.randn()) > 0
+    # X = np.column_stack([x1, x2, x3])
+    # data = pd.DataFrame(X, columns=["x1", "x2", "x3"])
+    # data["y"] = y
+    # woe_iv(data, "x1", "y")
 
 # 2\ linear model feature importances
 
