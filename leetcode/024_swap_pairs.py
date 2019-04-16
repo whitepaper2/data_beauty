@@ -32,6 +32,20 @@ def swap_pairs(head):
     return dummy.next
 
 
+def swap_pairs2(head):
+    """
+    note: 递归法,原始链表：1->2->3->4->5->6, 可以看做两部分：1）交换1->2 和 2）子结构3->4->5->6
+    :type head: ListNode
+    :rtype: ListNode
+    """
+    if head is None or head.next is None:
+        return head
+    temp = head.next
+    head.next = swap_pairs2(head.next.next)
+    temp.next = head
+    return temp
+
+
 if __name__ == "__main__":
     node1 = ListNode(1)
     node2 = ListNode(2)
@@ -44,10 +58,12 @@ if __name__ == "__main__":
     node4.next = node5
     temp = node1
     # print(type(temp))
+    print("before swap:")
     while temp is not None:
         print(temp.val)
         temp = temp.next
-    temp = swap_pairs(node1)
+    print("after swap:")
+    temp = swap_pairs2(node1)
     while temp is not None:
         print(temp.val)
         temp = temp.next
