@@ -17,6 +17,7 @@ class ListNode(object):
 
 def swap_pairs(head):
     """
+    note: 遍历该链表元素
     :type head: ListNode
     :rtype: ListNode
     """
