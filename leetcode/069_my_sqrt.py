@@ -45,12 +45,32 @@ def my_sqrt2(x):
     return right - 1
 
 
+def my_sqrt3(x):
+    """
+    note: 二分求解法，可以理解成在range(x)中寻找某个数，返回最右边值
+    :type x: int
+    :rtype: int
+    """
+    left = 0
+    right = x
+    while left <= right:
+        mid = left + (right-left)//2
+        if mid * mid == x:
+            return mid
+        elif mid * mid > x:
+            right = mid - 1
+        else:
+            left = mid + 1
+    return right
+
+
+
 if __name__ == "__main__":
     x = 10
-    print(my_sqrt2(x))
+    print(my_sqrt3(x))
     x = 1
-    print(my_sqrt2(x))
+    print(my_sqrt3(x))
     x = 16
-    print(my_sqrt2(x))
+    print(my_sqrt3(x))
     x = 2147395599
     print(my_sqrt2(x))
