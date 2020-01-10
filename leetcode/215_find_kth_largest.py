@@ -104,19 +104,62 @@ def build_minheap(nums: List[int], n: int):
     return nums
 
 
+def findKthLargest2(nums: List[int], k: int) -> int:
+    # 找枢纽点（点的左边数据>点的右边数据），若该点在k-1处，则直接返回该点对应的值；若该点>k-1，则在左边寻找；若该点<k-1，则在右边寻找
+    len_nums = len(nums)
+    left = 0
+    right = len_nums - 1
+    while left <= right:
+        pivot_ind = pivot(nums, left, right)
+        if pivot_ind == k - 1:
+            return nums[pivot_ind]
+        elif pivot_ind > k - 1:
+            right = pivot_ind - 1
+        else:
+            left = pivot_ind + 1
+
+
+def pivot(nums: List[int], left: int, right: int) -> int:
+    """
+    返回枢纽点
+    :param nums: 原始数组
+    :param left: 此次计算的起点
+    :param right: 此次计算的终点
+    :return: 枢纽点
+    """
+    nums0 = nums[left]
+    start = left + 1
+    end = right
+    while start <= end:
+        while nums[start] < nums0 < nums[end]:
+            tmp = nums[start]
+            nums[start] = nums[end]
+            nums[end] = tmp
+            start = start + 1
+            end = end - 1
+        if nums[start] >= nums0:
+            start = start + 1
+        if nums[end] <= nums0:
+            end = end - 1
+    nums[left] = nums[end]
+    nums[end] = nums0
+    return end
+
+
 if __name__ == "__main__":
     nums = [3, 2, 1, 5, 6, 4]
+    print(pivot(nums, 0, len(nums) - 1))
     build_maxheap(nums, len(nums))
     print(nums)
     heap_sorting(nums)
     print(nums)
     k = 2
-    print(findKthLargest(nums, k))
+    print(findKthLargest2(nums, k))
 
     nums = [3, 2, 3, 1, 2, 4, 5, 5, 6]
     k = 4
-    print(findKthLargest(nums, k))
+    print(findKthLargest2(nums, k))
 
     nums = [2, 1]
     k = 2
-    print(findKthLargest(nums, k))
+    print(findKthLargest2(nums, k))
