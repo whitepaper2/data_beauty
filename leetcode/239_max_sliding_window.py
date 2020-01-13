@@ -23,9 +23,9 @@ def maxSlidingWindow(nums: List[int], k: int) -> List[int]:
 def maxSlidingWindow2(nums: List[int], k: int) -> List[int]:
     """
     python heapq维护一个最小堆，数据和下标组成元组，遍历数组逐个加入，如果首元素不在窗口内，则删除，重新构造堆。
-    :param nums:
-    :param k:
-    :return:
+    :param nums:原始数组
+    :param k:滑动窗口k
+    :return:返回窗口中的最大值
     """
     if not nums: return []
     if k >= len(nums): return [max(nums)]
