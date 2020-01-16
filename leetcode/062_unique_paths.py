@@ -22,6 +22,23 @@ def unique_paths(m, n):
     return path[n - 1][m - 1]
 
 
+def unique_paths3(m, n):
+    """
+    note: 大问题拆分为子问题，矩阵表示与常规正好相反
+    动态规划，机器人只能向右或向下移动，dp[i][j]表示从左上角到坐标(i-1, j-1)的路径长度，状态转移公式：dp[i][j]=dp[i-1][j]+dp[i][j-1]
+    处理边缘值，dp[0][1]=1 or dp[1][0]=1，其他值初始化=0
+    :type m: int，列数
+    :type n: int，行数
+    :rtype: int，不同路径的个数
+    """
+    path = [[0] * (m+1) for _ in range(n+1)]
+    path[0][1] = 1
+    for i in range(1, n+1):
+        for j in range(1, m+1):
+            path[i][j] = path[i - 1][j] + path[i][j - 1]
+    return path[n][m]
+
+
 def unique_paths2(m, n):
     """
     note: 大问题拆分为子问题，节省空间，保存一维数据（不太明白？？？），每行保存一个值，更新方式：d[i] = d[i] + d[i-1]
@@ -41,4 +58,4 @@ if __name__ == "__main__":
     m = 7
     n = 3
     print(unique_paths(m, n))
-    print(unique_paths2(m, n))
+    print(unique_paths3(m, n))
