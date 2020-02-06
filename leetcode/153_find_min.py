@@ -21,6 +21,20 @@ def find_min(nums: List[int]) -> int:
     return nums[right]
 
 
+def find_min2(nums: List[int]) -> int:
+    left = 0
+    right = len(nums) - 1
+    while left < right:
+        mid = left + (right - left) // 2
+        if nums[mid] > nums[right]:
+            left = mid + 1
+        elif nums[mid] == nums[right]:
+            return min(find_min2(nums[left:mid]), find_min2(nums[mid+1:right+1]))
+        else:
+            right = mid
+    return nums[right]
+
+
 def find_max(nums: List[int]) -> int:
     left = 0
     right = len(nums) - 1
@@ -40,3 +54,8 @@ if __name__ == "__main__":
     nums = [4, 5, 6, 7, 0, 1, 2]
     print(find_min(nums))
     print(find_max(nums))
+
+    nums = [2, 2, 2, 2, 0, 1]
+    print(find_min2(nums))
+    nums = [3, 3, 1, 3]
+    print(find_min2(nums))
