@@ -10,6 +10,12 @@ from typing import List
 
 
 def searchMatrix(matrix: List[List[int]], target: int) -> bool:
+    """
+    note:二维矩阵转为一维，再使用二分查找法
+    :param matrix:
+    :param target:
+    :return:
+    """
     len_of_matrix = len(matrix)
     new_matrix = []
     for i in range(len_of_matrix):
@@ -60,6 +66,49 @@ def searchMatrix2(matrix: List[List[int]], target: int) -> bool:
     return False
 
 
+def searchMatrix3(matrix: List[List[int]], target: int) -> bool:
+    """
+    note:双指针法
+    :param matrix:
+    :param target:
+    :return:
+    """
+    m = len(matrix)
+    n = len(matrix[0])
+    row = 0
+    col = n - 1
+    while row < m and col >= 0:
+        if matrix[row][col] == target:
+            return True
+        elif matrix[row][col] > target:
+            col = col - 1
+        else:
+            row = row + 1
+    return False
+
+
+def searchMatrix4(matrix: List[List[int]], target: int) -> bool:
+    """
+    note:不需另存一维数据，坐标变换，再应用二分查找法
+    :param matrix:
+    :param target:
+    :return:
+    """
+    m = len(matrix)
+    n = len(matrix[0])
+    left = 0
+    right = m * n
+    while left < right:
+        mid = left + (right - left) // 2
+        if matrix[mid // n][mid % n] == target:
+            return True
+        elif matrix[mid // n][mid % n] > target:
+            right = mid
+        else:
+            left = mid + 1
+    return False
+
+
 if __name__ == "__main__":
     matrix = [
         [1, 3, 5, 7],
@@ -67,11 +116,11 @@ if __name__ == "__main__":
         [23, 30, 34, 50]
     ]
     target = 3
-    print(searchMatrix2(matrix, target))
+    print(searchMatrix4(matrix, target))
 
     target = 13
-    print(searchMatrix2(matrix, target))
+    print(searchMatrix4(matrix, target))
 
     matrix = [[]]
     target = 3
-    print(searchMatrix2(matrix, target))
+    print(searchMatrix4(matrix, target))
