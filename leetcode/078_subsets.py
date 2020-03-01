@@ -50,6 +50,33 @@ def subsets2(nums):
     return out
 
 
+def subsets3(nums):
+    """
+    note: 结果是升序排序，首先对原数据排序，DFS遍历二叉树。此处list使用deepcopy，数据和地址都复制，其他常用赋值都是浅复制
+    :type nums: List[int]
+    :rtype: List[List[int]]
+    """
+    out = []
+    from copy import deepcopy
+
+    def sub_func(nums, n, k, cur_out):
+        if k == n:
+            out.append(deepcopy(cur_out))
+            return
+        # 加入第k元素
+        cur_out.append(nums[k])
+        sub_func(nums, n, k + 1, cur_out)
+        # 不加入第k元素
+        cur_out.pop()
+        sub_func(nums, n, k + 1, cur_out)
+
+    sub_func(nums, len(nums), 0, [])
+    return out
+
+
 if __name__ == "__main__":
     nums = [5, 8, 9, 10]
-    print(subsets2(nums))
+    print(subsets3(nums))
+
+    nums = [1, 2, 3]
+    print(subsets3(nums))
