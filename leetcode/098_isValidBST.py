@@ -23,11 +23,21 @@ def isValidBST(root: TreeNode) -> bool:
     :param root:
     :return:
     """
-    if root is None:
-        return True
-    if root.left.val >= root.val or root.right.val <= root.val:
-        return False
-    return isValidBST(root.left) and isValidBST(root.right)
+    def sub_validbst(root, mn, mx):
+        """
+        定义当前节点、最小值、最大值，
+        :param root:
+        :param mn:
+        :param mx:
+        :return:
+        """
+        if root is None or root.val is None:
+            return True
+        if root.val <= mn or root.val >= mx:
+            return False
+        return sub_validbst(root.left, mn, root.val) and sub_validbst(root.right, root.val, mx)
+
+    return sub_validbst(root, -1000, 1000)
 
 
 def isValidBST2(root: TreeNode) -> bool:
@@ -71,8 +81,8 @@ def create_tree(nums):
 if __name__ == "__main__":
     nums = [2, 1, 3]
     root = create_tree(nums)
-    print(isValidBST2(root))
+    print(isValidBST(root))
 
-    nums = [5, 1, 4, None, None, 3, 6]
+    nums = [5, 1, 6, None, None, 3, 7]
     root = create_tree(nums)
-    print(isValidBST2(root))
+    print(isValidBST(root))
