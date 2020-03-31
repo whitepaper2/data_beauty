@@ -13,6 +13,8 @@ from keras.layers import Dropout
 from keras.layers import LSTM, Activation
 from keras.models import Sequential
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.metrics import mean_squared_error
+import math
 
 
 def data_analysis():
@@ -28,13 +30,14 @@ def data_preprocess():
     """
     pdf = pd.read_csv("./basic_route_hour_carcnt_label.csv")
     pdf = pdf.fillna(0)
+    pdf = pdf[pdf["hour_time"] == 11]
     train = pdf[pdf["day_time"] <= 20200225]
     test = pdf[pdf["day_time"] > 20200225]
     print("train size={}".format(len(train)), ", test size={}".format(len(test)))
     feature = ["last1dcnt", "last2dcnt", "last3dcnt", "last4dcnt", "last5dcnt", "last6dcnt", "last7dcnt", "last8dcnt",
                "last9dcnt", "last10dcnt", "last11dcnt",
                "last12dcnt", "last13dcnt", "last14dcnt"]
-    label = ["next1dcnt"]
+    label = ["next1dcnt", "next2dcnt", "next3dcnt", "next4dcnt", "next5dcnt"]
     pdf2 = pdf[feature + label]
 
     # print(pdf2.head())
@@ -61,22 +64,24 @@ def build_model(X_train, y_train):
     regressor = Sequential()
 
     regressor.add(LSTM(units=50, return_sequences=True, input_shape=(X_train.shape[1], X_train.shape[2])))
-    regressor.add(Dropout(0.2))
+    regressor.add(Dropout(0.5))
 
     regressor.add(LSTM(units=50, return_sequences=True))
-    regressor.add(Dropout(0.2))
+    regressor.add(Dropout(0.5))
 
     regressor.add(LSTM(units=50, return_sequences=True))
-    regressor.add(Dropout(0.2))
+    regressor.add(LSTM(units=50, return_sequences=True))
+    regressor.add(LSTM(units=50, return_sequences=True))
+    regressor.add(Dropout(0.5))
 
     regressor.add(LSTM(units=50))
-    regressor.add(Dropout(0.2))
+    regressor.add(Dropout(0.5))
 
-    regressor.add(Dense(units=1))
+    regressor.add(Dense(units=5))
 
     regressor.compile(optimizer='adam', loss='mean_squared_error')
 
-    regressor.fit(X_train, y_train, epochs=20, batch_size=100)
+    regressor.fit(X_train, y_train, epochs=10, batch_size=64)
     return regressor
 
 
@@ -94,15 +99,24 @@ if __name__ == "__main__":
     print(y_pred)
     y_pred_scaled = sc.inverse_transform(y_pred)
     print(y_pred_scaled)
-    from sklearn.metrics import mean_squared_error
+    print(y_test)
 
-    rmse = mean_squared_error(y_pred_scaled, y_test)
+    rmse = math.sqrt(mean_squared_error(y_pred_scaled, y_test))
     print('Test RMSE: %.3f' % rmse)
 
-    y_test2 = [x for y in y_test for x in y]
-    y_pred_scaled2 = [x for y in y_pred_scaled for x in y]
+    # y_test2 = [x for y in y_test for x in y]
+    # y_pred_scaled2 = [x for y in y_pred_scaled for x in y]
+    # prediction = pd.DataFrame({"y_pred": y_pred_scaled, "y_test": y_test})
+    # prediction.to_csv("./prediction.csv")
     err = 0
-    for x, y in zip(y_pred_scaled2, y_test2):
-        err += abs(x - y) / y
-    print(err / len(y_test2))
+    cnt = 0
+    err2 = 0
+    for x, y in zip(y_pred_scaled, y_test):
+        for x2, y2 in zip(x, y):
+            if y2 != 0:
+                err += abs(round(x2) - y2) / y2
+            err2 += abs(round(x2) - y2) / (y2 + 0.1)
+            cnt += 1
+    print(err / cnt)
+    print(err2 / cnt)
     # predicted_stock_price = sc.inverse_transform(predicted_stock_price)
