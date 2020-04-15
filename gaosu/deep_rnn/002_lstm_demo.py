@@ -3,96 +3,122 @@
 # @Time    : 2020/3/18 下午2:01
 # @Author  : pengyuan.li
 # @Site    : 
-# @File    : 001_train_lstm.py
+# @File    : 003_train_seq2seq.py
 # @Software: PyCharm
 
-import numpy as np
-import pandas as pd
+from numpy import array
+from numpy import argmax
+from numpy import array_equal
+from keras.utils import to_categorical
+from keras.models import Model
+from keras.layers import Input
+from keras.layers import LSTM
 from keras.layers import Dense
-from keras.layers import Dropout
-from keras.layers import LSTM,Activation
-from keras.models import Sequential
-from sklearn.preprocessing import MinMaxScaler
+from random import randint
+import pandas as pd
 
 
-def data_analysis():
-    pdf = pd.read_csv("./basic_route_hour_carcnt_label.csv")
-    print(pdf.head())
-    print(pdf.count())
+# 随机产生在(1,n_features)区间的整数序列，序列长度为n_steps_in
+def generate_sequence(length, n_unique):
+    return [randint(1, n_unique - 1) for _ in range(length)]
 
 
-def data_preprocess():
-    """
-    数据预处理，输出序列格式的数据
-    :return:
-    """
-    pdf = pd.read_csv("./basic_route_hour_carcnt_label.csv")
-    pdf = pdf.fillna(0)
-    train = pdf[pdf["day_time"] <= 20200225]
-    test = pdf[pdf["day_time"] > 20200225]
-    print("train size={}".format(len(train)), ", test size={}".format(len(test)))
-    feature = ["last2dcnt"]
-    label = ["last1dcnt"]
+# 构造LSTM模型输入需要的训练数据
+def get_dataset(n_in, n_out, cardinality, n_samples):
+    X1, X2, y = list(), list(), list()
+    for _ in range(n_samples):
+        # 生成输入序列
+        source = generate_sequence(n_in, cardinality)
+        # 定义目标序列，这里就是输入序列的前三个数据
+        target = source[:n_out]
+        target.reverse()
+        # 向前偏移一个时间步目标序列
+        target_in = [0] + target[:-1]
+        # 直接使用to_categorical函数进行on_hot编码
+        src_encoded = to_categorical(source, num_classes=cardinality)
+        tar_encoded = to_categorical(target, num_classes=cardinality)
+        tar2_encoded = to_categorical(target_in, num_classes=cardinality)
 
-    # print(pdf2.head())
-    X_train = np.array(train.loc[:, feature])
-    y_train = np.array(train.loc[:, label])
-    X_test = np.array(test.loc[:, feature])
-    y_test = np.array(test.loc[:, label])
-    # sc = MinMaxScaler(feature_range=(0, 1))
-    # X_train = sc.fit_transform(X_train2)
-    # X_test = sc.transform(X_test2)
-    X_train = X_train.reshape((X_train.shape[0], 1, X_train.shape[1]))
-    X_test = X_test.reshape((X_test.shape[0], 1, X_test.shape[1]))
-    print(X_train.shape[1], X_train.shape[2])
-    return X_train, y_train, X_test, y_test
+        X1.append(src_encoded)
+        X2.append(tar2_encoded)
+        y.append(tar_encoded)
+    return array(X1), array(X2), array(y)
 
 
-def build_model(X_train, y_train):
-    """
-    构建模型，
-    :param X_train: 特征
-    :param y_train: 标签
-    :return: model
-    """
-    regressor = Sequential()
+# 构造Seq2Seq训练模型model, 以及进行新序列预测时需要的的Encoder模型:encoder_model 与Decoder模型:decoder_model
+def define_models(n_input, n_output, n_units):
+    # 训练模型中的encoder
+    encoder_inputs = Input(shape=(None, n_input))
+    encoder = LSTM(n_units, return_state=True)
+    encoder_outputs, state_h, state_c = encoder(encoder_inputs)
+    encoder_states = [state_h, state_c]  # 仅保留编码状态向量
+    # 训练模型中的decoder
+    decoder_inputs = Input(shape=(None, n_output))
+    decoder_lstm = LSTM(n_units, return_sequences=True, return_state=True)
+    decoder_outputs, _, _ = decoder_lstm(decoder_inputs, initial_state=encoder_states)
+    decoder_dense = Dense(n_output, activation='softmax')
+    decoder_outputs = decoder_dense(decoder_outputs)
+    model = Model([encoder_inputs, decoder_inputs], decoder_outputs)
+    # 新序列预测时需要的encoder
+    encoder_model = Model(encoder_inputs, encoder_states)
+    # 新序列预测时需要的decoder
+    decoder_state_input_h = Input(shape=(n_units,))
+    decoder_state_input_c = Input(shape=(n_units,))
+    decoder_states_inputs = [decoder_state_input_h, decoder_state_input_c]
+    decoder_outputs, state_h, state_c = decoder_lstm(decoder_inputs, initial_state=decoder_states_inputs)
+    decoder_states = [state_h, state_c]
+    decoder_outputs = decoder_dense(decoder_outputs)
+    decoder_model = Model([decoder_inputs] + decoder_states_inputs, [decoder_outputs] + decoder_states)
+    # 返回需要的三个模型
+    return model, encoder_model, decoder_model
 
-    regressor.add(LSTM(4, input_shape=(X_train.shape[1], X_train.shape[2])))
-    regressor.add(Dropout(0.2))
 
-    # regressor.add(LSTM(units=50, return_sequences=True))
-    # regressor.add(Dropout(0.2))
+def predict_sequence(infenc, infdec, source, n_steps, cardinality):
+    # 输入序列编码得到编码状态向量
+    state = infenc.predict(source)
+    # 初始目标序列输入：通过开始字符计算目标序列第一个字符，这里是0
+    target_seq = array([0.0 for _ in range(cardinality)]).reshape(1, 1, cardinality)
+    # 输出序列列表
+    output = list()
+    for t in range(n_steps):
+        # predict next char
+        yhat, h, c = infdec.predict([target_seq] + state)
+        # 截取输出序列，取后三个
+        output.append(yhat[0, 0, :])
+        # 更新状态
+        state = [h, c]
+        # 更新目标序列(用于下一个词预测的输入)
+        target_seq = yhat
+    return array(output)
 
-    # regressor.add(LSTM(units=50, return_sequences=True))
-    # regressor.add(Dropout(0.2))
 
-    # regressor.add(LSTM(4))
-    # regressor.add(Dropout(0.2))
-
-    regressor.add(Dense(1))
-
-    regressor.compile(optimizer='adam', loss='mean_squared_error')
-
-    regressor.fit(X_train, y_train, epochs=5, batch_size=100)
-    return regressor
+# one_hot解码
+def one_hot_decode(encoded_seq):
+    return [argmax(vector) for vector in encoded_seq]
 
 
-if __name__ == "__main__":
-    X_train, y_train, X_test, y_test = data_preprocess()
-    # sc = MinMaxScaler(feature_range=(0, 1))
-    # y_train_scaled = sc.fit_transform(y_train)
-    # y_test_scaled = sc.transform(y_test)
-    # print(y_train_scaled)
-    # print(y_test_scaled)
-
-    model = build_model(X_train, y_train)
-    print(model.summary())
-    y_pred = model.predict(X_test)
-    print(y_pred)
-    # y_pred_scaled = sc.inverse_transform(y_pred)
-    # print(y_pred_scaled)
-    from sklearn.metrics import mean_squared_error
-    import math
-    rmse = math.sqrt(mean_squared_error(y_pred, y_test))
-    print('Test RMSE: %.3f' % rmse)
-    # predicted_stock_price = sc.inverse_transform(predicted_stock_price)
+# 参数设置
+n_features = 50 + 1
+n_steps_in = 6
+n_steps_out = 3
+# 定义模型
+train, infenc, infdec = define_models(n_features, n_features, 128)
+train.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['acc'])
+# 生成训练数据
+X1, X2, y = get_dataset(n_steps_in, n_steps_out, n_features, 100000)
+print(X1.shape, X2.shape, y.shape)
+# 训练模型
+train.fit([X1, X2], y, epochs=1)
+# 评估模型效果
+total, correct = 100, 0
+for _ in range(total):
+    X1, X2, y = get_dataset(n_steps_in, n_steps_out, n_features, 1)
+    target = predict_sequence(infenc, infdec, X1, n_steps_out, n_features)
+    if array_equal(one_hot_decode(y[0]), one_hot_decode(target)):
+        correct += 1
+print('Accuracy: %.2f%%' % (float(correct) / float(total) * 100.0))
+# 查看预测结果
+for _ in range(10):
+    X1, X2, y = get_dataset(n_steps_in, n_steps_out, n_features, 1)
+    target = predict_sequence(infenc, infdec, X1, n_steps_out, n_features)
+    print('X=%s y=%s, yhat=%s' % (one_hot_decode(X1[0]), one_hot_decode(y[0]), one_hot_decode(target)))
