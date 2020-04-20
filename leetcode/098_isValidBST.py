@@ -37,7 +37,7 @@ def isValidBST(root: TreeNode) -> bool:
             return False
         return sub_validbst(root.left, mn, root.val) and sub_validbst(root.right, root.val, mx)
 
-    return sub_validbst(root, -1000, 1000)
+    return sub_validbst(root, float("-inf"), float("inf"))
 
 
 def isValidBST2(root: TreeNode) -> bool:
