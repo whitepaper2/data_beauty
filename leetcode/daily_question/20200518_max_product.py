@@ -25,6 +25,13 @@ class Solution:
         return max_p
 
     def maxProduct2(self, nums: List[int]) -> int:
+        """
+        note: max(p[j...i]) = if nums[i]>0, max(p[j...i-1])越大越好 ; if nums[i]<0, min(p[j...i-1])越小越好。
+        max(p[j...i]) = max( max(p[j...i-1])*nums[i], nums[i], min(p[j...i-1])*nums[i] )
+        min(p[j...i]) = min( max(p[j...i-1])*nums[i], nums[i], min(p[j...i-1])*nums[i] )
+        :param nums:
+        :return:
+        """
         n = len(nums)
         max_p = [nums[0] for _ in range(n)]
         min_p = [nums[0] for _ in range(n)]
