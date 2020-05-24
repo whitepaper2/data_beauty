@@ -10,6 +10,7 @@
 from typing import List
 
 
+# 求数组中连续子数组的最大乘积
 class Solution:
     def maxProduct(self, nums: List[int]) -> int:
         max_p = float("-inf")

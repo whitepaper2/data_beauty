@@ -40,7 +40,7 @@ class Solution:
         for i in range(len(nums)):
             cur_sum += nums[i]
             if sum_dict.get(cur_sum - k):
-                cnt += sum_dict.get(cur_sum-k)
+                cnt += sum_dict.get(cur_sum - k)
             sum_dict[cur_sum] = sum_dict.setdefault(cur_sum, 0) + 1
         return cnt
 
