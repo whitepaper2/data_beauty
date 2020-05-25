@@ -7,44 +7,21 @@
 # @Software: PyCharm
 
 
-from keras.layers import *
-import jieba
 import multiprocessing
+
 import pandas as pd
 from gensim.models import Word2Vec
-import numpy as np
-import keras.backend as K
-from keras.callbacks import Callback, ModelCheckpoint
-from keras.models import Model
-from keras.utils.np_utils import to_categorical
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import *
-import ipykernel
-import tensorflow as tf
-from sklearn.metrics import roc_auc_score
-from sklearn.utils import shuffle
+from keras.callbacks import Callback
 from keras.layers import *
-import jieba
-import multiprocessing
-from gensim.models import Word2Vec
-from keras.callbacks import Callback, ModelCheckpoint
-from keras.models import Model
-from keras.utils.np_utils import to_categorical
-from keras.preprocessing.text import Tokenizer
-from keras.preprocessing.sequence import pad_sequences
-from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import *
-import ipykernel
 from sklearn.metrics import roc_auc_score
-from sklearn.utils import shuffle
 from tensorflow import set_random_seed
 
 # 设置随机种子
 SEED = 2019
 np.random.seed(SEED)
 set_random_seed(SEED)
+# embedding的维度
+EMBEDDING_DIM = 100
 
 
 def to_text(row, columns):
@@ -62,11 +39,12 @@ def to_text(row, columns):
     return " ".join(text)
 
 
-def train_w2v(text_list=None, output_vector='tmp/w2v.txt', embedding_dim=100):
+def train_w2v(text_list=None, output_vector='tmp/', embedding_dim=EMBEDDING_DIM):
     """
     训练word2vec
     :param text_list:文本列表
     :param output_vector:词向量输出路径
+    :param embedding_dim:词向量维度
     :return:
     """
     print("正在训练词向量。。。")
@@ -76,7 +54,7 @@ def train_w2v(text_list=None, output_vector='tmp/w2v.txt', embedding_dim=100):
                      workers=multiprocessing.cpu_count()
                      )
     # 保存词向量
-    model.wv.save_word2vec_format(output_vector, binary=False)
+    model.wv.save_word2vec_format(output_vector + "w2v_{}.txt".format(embedding_dim), binary=False)
 
 
 def create_embedding(word_index, w2v_file, embedding_dim, input_length):
@@ -106,12 +84,13 @@ def create_embedding(word_index, w2v_file, embedding_dim, input_length):
             embedding_matrix[i] = embedding_vector
     embedding_layer = Embedding(len(word_index) + 1,
                                 embedding_dim,
+                                weights=[embedding_matrix],
                                 input_length=input_length,
                                 trainable=False)
     return embedding_layer
 
 
-class roc_auc_callback(Callback):
+class AucCallback(Callback):
     def __init__(self, training_data, validation_data):
         super().__init__()
         self.x = training_data[0]
@@ -138,10 +117,12 @@ class roc_auc_callback(Callback):
         roc_val = roc_auc_score(self.y_val, y_pred_val)
         logs['roc_auc_val'] = roc_auc_score(self.y_val, y_pred_val)
         logs['norm_gini_val'] = (roc_auc_score(self.y_val, y_pred_val) * 2) - 1
-
-        print('\rroc_auc: %s - roc_auc_val: %s - norm_gini: %s - norm_gini_val: %s' % (
-            str(round(roc, 5)), str(round(roc_val, 5)), str(round((roc * 2 - 1), 5)), str(round((roc_val * 2 - 1), 5))),
-              end=10 * ' ' + '\n')
+        eval_res = '\rroc_auc: %s , roc_auc_val: %s , norm_gini: %s , norm_gini_val: %s' % (
+            str(round(roc, 5)), str(round(roc_val, 5)), str(round((roc * 2 - 1), 5)),
+            str(round((roc_val * 2 - 1), 5))) + 10 * ' ' + '\n'
+        print(eval_res)
+        with open('tmp/eval.txt', 'w', encoding='utf-8') as f:  # 使用with open()新建对象f
+            f.write(eval_res)  # 写入数据
         return
 
     def on_batch_begin(self, batch, logs=None):

@@ -7,25 +7,13 @@
 # @Software: PyCharm
 
 
-from keras.layers import *
-from tensorflow import set_random_seed
-import jieba
-import multiprocessing
-import pandas as pd
-from gensim.models import Word2Vec
-import numpy as np
-import keras.backend as K
-from keras.callbacks import Callback, ModelCheckpoint
+from keras.callbacks import ModelCheckpoint
 from keras.models import Model
-from keras.utils.np_utils import to_categorical
-from keras.preprocessing.text import Tokenizer
 from keras.preprocessing.sequence import pad_sequences
+from keras.preprocessing.text import Tokenizer
 from sklearn.model_selection import StratifiedKFold
-from sklearn.metrics import *
-import ipykernel
-import tensorflow as tf
-from sklearn.metrics import roc_auc_score
 from sklearn.utils import shuffle
+
 from utils import *
 
 # 设置随机种子
@@ -57,7 +45,7 @@ feas = [fea for fea in df.columns if fea not in no_feas]
 print(len(feas))
 
 # 参数
-is_Train_w2v = True  # 是否重新训练词向量
+is_Train_w2v = False  # 是否重新训练词向量
 EMBEDDING_DIM = 100  # 词向量维度
 MAX_SEQUENCE_LENGTH = len(feas)  # 序列最大长度 len(feas)
 W2V_FILE = 'tmp/w2v.txt'
@@ -151,8 +139,8 @@ for i, (train_index, valid_index) in enumerate(skf.split(x_train, y_train)):
                         validation_data=(X_valid, y_val),
                         epochs=5, batch_size=32,
                         callbacks=[checkpoint,
-                                   roc_auc_callback(training_data=(X_train, y_tr),
-                                                    validation_data=(X_valid, y_val))])
+                                   AucCallback(training_data=(X_train, y_tr),
+                                               validation_data=(X_valid, y_val))])
 
     # model.load_weights('models/cnn_text.h5')
     yval_pred = model.predict(X_valid)
