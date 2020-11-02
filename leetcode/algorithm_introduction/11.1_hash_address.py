@@ -33,9 +33,9 @@ class OpenAddressHash(object):
     def hash_insert(self, k):
         i = 0
         while i < self.size:
-            # j = self.double_hash(k, i)
+            j = self.double_hash(k, i)
             # j = self.linear_hash(k, i)
-            j = self.quard_hash(k, i)
+            # j = self.quard_hash(k, i)
             if not self.T[j]:
                 self.T[j] = k
                 return j
@@ -46,9 +46,9 @@ class OpenAddressHash(object):
         i = 0
         j = self.double_hash(k, i)
         while self.T[j] and i < self.size:
-            # j = self.double_hash(k, i)
+            j = self.double_hash(k, i)
             # j = self.linear_hash(k, i)
-            j = self.quard_hash(k, i)
+            # j = self.quard_hash(k, i)
             if self.T[j] == k:
                 return j
             i += 1
