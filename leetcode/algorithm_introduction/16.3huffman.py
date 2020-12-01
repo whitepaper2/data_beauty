@@ -26,15 +26,15 @@ def createHuffmanTree(strsDict):
     :param strsDict:
     :return:
     """
-    queue = [(v, k, TreeNode((v, k))) for k, v in strsDict.items()]
+    queue = [(v, TreeNode((v, k))) for k, v in strsDict.items()]
     heapq.heapify(queue)
     while len(queue) > 1:
-        n1, s1, t1 = heapq.heappop(queue)
-        n2, s2, t2 = heapq.heappop(queue)
+        n1, t1 = heapq.heappop(queue)
+        n2, t2 = heapq.heappop(queue)
         z = TreeNode((n1 + n2, None))
         z.left = t1
         z.right = t2
-        heapq.heappush(queue, (n1 + n2, None, z))
+        heapq.heappush(queue, (n1 + n2, z))
     return queue[-1]
 
 
@@ -93,8 +93,8 @@ def huffmanDecode(strs):
 if __name__ == "__main__":
     strsDict = {'a': 45, 'b': 13, 'c': 12, 'd': 16, 'e': 9, 'f': 5}
     root = createHuffmanTree(strsDict)
-    # inorderTravel(root[2])
-    genHuffmanDict(root[2], '')
+    inorderTravel(root[1])
+    genHuffmanDict(root[1], '')
     print(encodeDict, decodeDict)
     print(huffmanEncode("abcd"))
     print(huffmanDecode("0101100111"))
