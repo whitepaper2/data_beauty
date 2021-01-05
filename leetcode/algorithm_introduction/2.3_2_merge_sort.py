@@ -8,6 +8,14 @@
 
 
 def merge(A, p, q, r):
+    """
+    note：排序有序数组，哨兵，复制出来，重新构造，双指针
+    :param A:
+    :param p:
+    :param q:
+    :param r:
+    :return:
+    """
     n1 = q - p + 1
     n2 = r - q
     L = [A[p + i] for i in range(0, n1)]
@@ -26,12 +34,47 @@ def merge(A, p, q, r):
         k += 1
 
 
+def merge2(A, p, q, r):
+    """
+    note：排序有序数组，复制出来，重新构造，双指针
+    :param A:
+    :param p:
+    :param q:
+    :param r:
+    :return:
+    """
+    n1 = q - p + 1
+    n2 = r - q
+    L = [A[p + i] for i in range(0, n1)]
+    R = [A[q + 1 + i] for i in range(0, n2)]
+    k = p
+    i, j = 0, 0
+    while i < n1 and j < n2:
+        if L[i] < R[j]:
+            A[k] = L[i]
+            i += 1
+        else:
+            A[k] = R[j]
+            j += 1
+        k += 1
+    if i == n1:
+        while j < n2:
+            A[k] = R[j]
+            k += 1
+            j += 1
+    if j == n2:
+        while i < n1:
+            A[k] = L[i]
+            k += 1
+            i += 1
+
+
 def subMerge(A, p, q):
     if p < q:
         mid = (p + q) // 2
         subMerge(A, p, mid)
         subMerge(A, mid + 1, q)
-        merge(A, p, mid, q)
+        merge2(A, p, mid, q)
 
 
 def merge_sort(nums):

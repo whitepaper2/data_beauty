@@ -23,6 +23,35 @@ def insertion_sort(nums):
     return nums
 
 
+def recursiveSub(A, i):
+    """
+    已排序 A[0...i-1]+A[i]
+    :param A:
+    :param i:
+    :return:
+    """
+    if i <= 0:
+        return
+    recursiveSub(A, i - 1)
+    j = i - 1
+    key = A[i]
+    while j >= 0 and A[j] > key:
+        A[j + 1] = A[j]
+        j -= 1
+    A[j + 1] = key
+
+
+def recursive_insertion_sort(nums):
+    """
+    note: 递归版插入排序，升序
+    :param nums: List[Int]
+    :return: List[Int]
+    """
+    recursiveSub(nums, len(nums) - 1)
+    return nums
+
+
 if __name__ == "__main__":
     nums = [31, 41, 59, 26, 41, 58]
     print(insertion_sort(nums))
+    print(recursive_insertion_sort(nums))
