@@ -13,12 +13,16 @@ def brute_find_maximum_subarray(stocks):
     :param stocks: 一段时间内的股票交易价格
     :return: 买入时间、卖出时间、赚的差价
     """
+    if len(stocks) == 0:
+        return -1, -1, -1
+    if len(stocks) == 1:
+        return 0, 0, stocks[0]
     max_sum = -float("inf")
     min_in = 0
     max_out = len(stocks) - 1
-    for i in range(len(stocks)):
-        for j in range(i, len(stocks)):
-            if stocks[i] <= stocks[j] and stocks[j] - stocks[i] > max_sum:
+    for i in range(len(stocks) - 1):
+        for j in range(i + 1, len(stocks)):
+            if stocks[j] - stocks[i] > max_sum:
                 max_sum = stocks[j] - stocks[i]
                 min_in = i
                 max_out = j
@@ -32,6 +36,10 @@ def divide_find_maximum_subarray(stocks):
     :param stocks: 一段时间内的股票交易价格
     :return: 买入时间、卖出时间、赚的差价
     """
+    if len(stocks) == 0:
+        return -1, -1, -1
+    if len(stocks) == 1:
+        return 0, 0, stocks[0]
     diff_stocks = [stocks[i] - stocks[i - 1] for i in range(1, len(stocks))]
     left = 0
     right = len(diff_stocks) - 1
@@ -91,9 +99,47 @@ def divide_find_maximum_subarray(stocks):
     return min_in, max_out + 1, max_sum
 
 
+def linearMaxSubarray(stocks):
+    """
+    diff[0...i]=max(diff[0...i-1], sum(diff[k...i]))
+    :param stocks:
+    :return:
+    """
+    if len(stocks) == 0:
+        return -1, -1, -1
+    if len(stocks) == 1:
+        return 0, 0, stocks[0]
+    diffStocks = [stocks[i] - stocks[i - 1] for i in range(1, len(stocks))]
+    sell_in, sell_out = 0, 0
+    maxi1Sum, maxi2Sum = diffStocks[0], float("-inf")
+    for i in range(1, len(diffStocks)):
+        maxi2Sum = maxi1Sum
+        curSum = -float("inf")
+        cumSum = 0
+        j = i
+        tmp_in = sell_in
+        while j > -1:
+            cumSum += diffStocks[j]
+            if cumSum > curSum:
+                curSum = cumSum
+                tmp_in = j
+            j -= 1
+        if maxi2Sum < curSum:
+            maxi2Sum = curSum
+            sell_in, sell_out = tmp_in, i
+        maxi1Sum = maxi2Sum
+    return sell_in, sell_out + 1, maxi1Sum
+
+
 if __name__ == "__main__":
     stocks = [100, 113, 110, 85, 105, 102, 86, 63, 81, 101, 94, 106, 101, 79, 94, 90, 97]
+    stocks = [100, 93, 90, 85, 75]
+    stocks = [100, 112]
+    stocks = [100]
     sell_in, sell_out, price = brute_find_maximum_subarray(stocks)
     print(sell_in, sell_out, price)
     sell_in, sell_out, price = divide_find_maximum_subarray(stocks)
+    print(sell_in, sell_out, price)
+
+    sell_in, sell_out, price = linearMaxSubarray(stocks)
     print(sell_in, sell_out, price)
