@@ -37,8 +37,25 @@ def is_heap(nums):
     return flag
 
 
+def getMinMax(A):
+    minVal = float("inf")
+    maxVal = float("-inf")
+    i, j = 0, len(A) - 1
+    while i <= j:
+        maxij = max(A[i], A[j])
+        minij = min(A[i], A[j])
+        if maxij > maxVal:
+            maxVal = maxij
+        if minij < minVal:
+            minVal = minij
+        i += 1
+        j -= 1
+    return minVal, maxVal
+
+
 if __name__ == "__main__":
     nums = [9, 4, 8, 3, 2, 5, 7]
+    print(getMinMax(nums))
     print(is_heap(nums))
     nums = [9, 4, 7, 2, 1, 6, 5, 3]
     print(is_heap(nums))

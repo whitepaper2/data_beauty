@@ -21,9 +21,10 @@ class UnionFindSets:
             self.rank[a] = 1
 
     def find(self, x):
+        # while x != self.parent[x]:
+        #     x = self.parent[x]
+        # return self.parent[x]
         father = self.parent[x]
-        # while father != x:
-        # father = self.parent[father]
         if father != x:
             father = self.find(father)
         self.parent[x] = father
@@ -39,12 +40,18 @@ class UnionFindSets:
 
         xRank = self.rank[xHead]
         yRank = self.rank[yHead]
-        if xRank >= yRank:
+        # if xRank >= yRank:
+        #     self.parent[yHead] = xHead
+        #     if xRank == yRank:
+        #         self.rank[xRank] += 1
+        # else:
+        #     self.parent[xHead] = yHead
+        if xRank < yRank:
+            self.parent[xHead] = yHead
+        else:
             self.parent[yHead] = xHead
             if xRank == yRank:
-                self.rank[xRank] += 1
-        else:
-            self.parent[xHead] = yHead
+                self.rank[xHead] += 1
         self.setsNum -= 1
 
 
