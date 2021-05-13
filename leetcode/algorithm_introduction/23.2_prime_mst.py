@@ -61,8 +61,10 @@ def primeMst(G, s):
             if v in curVertex and vw < weight[v]:
                 weight[v] = vw
                 parent[v] = u
-                minHeap = [(weight[u], u) for u in curVertex]
-                heapq.heapify(minHeap)
+            # 1.decrease weight,O(n)
+            minHeap = [(weight[u], u) for u in curVertex]
+            heapq.heapify(minHeap)
+            # 2.decrease weight, 0(lgN), siftup
     return mst, parent
 
 
