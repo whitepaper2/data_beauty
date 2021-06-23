@@ -20,9 +20,30 @@ def poly(A, x, n):
     return res
 
 
-if __name__ == "__main__":
-    A = [2, 3, 4, 1]
-    n = 4
-    x = 2
+import matplotlib as mpl
+from mpl_toolkits.mplot3d import Axes3D
+import numpy as np
+import matplotlib.pyplot as plt
+from matplotlib import cm
 
-    print(poly(A, x, n))
+mpl.rcParams['legend.fontsize'] = 10
+
+fig = plt.figure()
+ax = fig.gca(projection='3d')
+x = np.linspace(-10, 10, 10000)
+y = np.linspace(-10, 10, 10000)
+s = 0.7*x+0.3*y
+ax.plot(x, y, s, label='parametric curve')
+ax.legend()
+plt.show()
+
+# cset = ax.contour(x, y, s, cmap=cm.coolwarm)
+# ax.clabel(cset, fontsize=9, inline=1)
+#
+# plt.show()
+# if __name__ == "__main__":
+#     A = [2, 3, 4, 1]
+#     n = 4
+#     x = 2
+#
+#     print(poly(A, x, n))
